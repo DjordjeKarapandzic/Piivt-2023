@@ -1,9 +1,7 @@
-import { resolve } from "path";
 import CategoryModel from "./CategoryModel.model";
-import * as mysql2 from 'mysql2/promise';
 import IAddCategory from "./dto/IAddCategory.dto";
-import IAdapterOptions from "../../common/IAdapterOptions.interface";
 import BaseService from "../../common/BaseService";
+import IEditCategory from "./dto/IEditCategory.dto";
 
 class CategoryService extends BaseService<CategoryModel,null>{
     tableName(): string {
@@ -20,29 +18,12 @@ class CategoryService extends BaseService<CategoryModel,null>{
     }
 
     public async add(data: IAddCategory): Promise<CategoryModel>{
-        return new Promise<CategoryModel>((resolve, reject) =>{
-            const sql: string = "INSERT `category` SET `name` = ?;";
-
-            this.db.execute(sql, [ data.name ])
-                .then(async result =>{
-                    const info:any = result;
-
-                    const newCategoryId = +(info[0]?.insertId);
-
-                    const newCategory: CategoryModel|null = await this.getById(newCategoryId, null);
-                    if(newCategory === null){
-                       return reject({
-                            message: 'Duplicate category name!'
-                        });
-                    }
-                    resolve(newCategory);
-                })
-                .catch(error => {
-                    reject(error);
-                });
-        });
+        return this.baseAdd(data,null);
     }
 
+    public async editById(categoryId: number, data: IEditCategory): Promise<CategoryModel>{
+        return this.baseEdit(categoryId,data, null);
+    } 
 }
 
 

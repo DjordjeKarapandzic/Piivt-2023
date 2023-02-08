@@ -1,6 +1,8 @@
 import * as mysql2 from 'mysql2/promise';
 import IModel from './IModel.interface';
 import IAdapterOptions from './IAdapterOptions.interface';
+import IServiceData from './IServiceData.interface';
+import { resolve } from 'path';
 
 export default abstract class BaseService<ReturnModel extends IModel, AdapterOptions extends IAdapterOptions> {
     private database: mysql2.Connection;
@@ -70,4 +72,67 @@ export default abstract class BaseService<ReturnModel extends IModel, AdapterOpt
         );
     }
 
+    protected async baseAdd(data: IServiceData, options: AdapterOptions): Promise<ReturnModel>{
+        const tableName = this.tableName();
+
+        return new Promise<ReturnModel>((resolve, reject) =>{
+            const properties = Object.getOwnPropertyNames(data);
+            const sqlPairs = properties.map(property => "`" + property + "` = ?").join(", ");
+            const values = properties.map(property => data[property]);
+
+            const sql: string = "INSERT `" + tableName + "` SET" + sqlPairs + ";";
+
+            this.db.execute(sql, values)
+                .then(async result =>{
+                    const info:any = result;
+
+                    const newItemId = +(info[0]?.insertId);
+
+                    const newCategory: ReturnModel|null = await this.getById(newItemId, options);
+                    if(newCategory === null){
+                       return reject({
+                            message: 'Could not add new item into table '+ tableName
+                        });
+                    }
+                    resolve(newCategory);
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });
+    }
+
+    protected async baseEdit(id: number, data: IServiceData, options: AdapterOptions): Promise<ReturnModel>{
+        const tableName = this.tableName();
+
+        return new Promise((resolve, reject) => {
+            const properties = Object.getOwnPropertyNames(data);
+            const sqlPairs = properties.map(property => "`" + property + "` = ?").join(", ");
+            const values = properties.map(property => data[property]);
+            values.push(id);
+
+            const sql: string = "UPDATE `" + tableName + "` SET" + sqlPairs + " WHERE `" + tableName + "_id` = ?;";
+
+            this.db.execute(sql, values)
+                .then(async result =>{
+                    const info:any = result;
+                    
+                    if(info[0]?.affectedRows === 0){
+                        return reject({message: "Couldn't change items in table " + tableName});
+                    }
+
+                    const item: ReturnModel|null = await this.getById(id, options);
+
+                    if(item === null){
+                       return reject({
+                            message: 'Could not add new item into table '+ tableName
+                        });
+                    }
+                    resolve(item);
+                })
+                .catch(error => {
+                    reject(error);
+                });
+        });    
+    }
 }
