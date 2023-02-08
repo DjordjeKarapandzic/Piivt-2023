@@ -1,17 +1,14 @@
-import CategoryService from './CategoryService.service';
 import { Request, Response, response } from 'express';
 import { AddCategoryValidator } from './dto/IAddCategory.dto';
 import IAddCategory from './dto/IAddCategory.dto';
-import IEditCategory, { EditCategoryValidator, IEditCategoryDto } from './dto/IEditCategory.dto';
-class  CategoryController {
-    private categoryService: CategoryService;
+import BaseController from '../../common/BaseController';
+import { EditCategoryValidator, IEditCategoryDto } from './dto/IEditCategory.dto';
 
-    constructor(categoryService: CategoryService){
-        this.categoryService = categoryService;
-    }
-
+class  CategoryController extends BaseController{
+    
+    
     async getAll(req: Request, res: Response){
-        this.categoryService.getAll(null)
+        this.services.category.getAll(null)
             .then(result => {
                 res.send(result);
             })
@@ -23,7 +20,7 @@ class  CategoryController {
     async getById(req: Request, res: Response){
         const id: number = +req.params?.id;
 
-        this.categoryService.getById(id,null)
+        this.services.category.getById(id,null)
             .then(result => {
                 if(result === null){
                     return res.sendStatus(404);
@@ -45,7 +42,7 @@ class  CategoryController {
             return res.status(400).send(AddCategoryValidator.errors);
         }
 
-        this.categoryService.add(data)
+        this.services.category.add(data)
         .then(result => {
             res.send(result);
         })
@@ -62,13 +59,13 @@ class  CategoryController {
             return res.status(400).send(AddCategoryValidator.errors);
         }
 
-        this.categoryService.getById(id,null)
+        this.services.category.getById(id,null)
             .then(result => {
                 if(result === null){
                     return res.sendStatus(404);
                 }
 
-                this.categoryService.editById(id,{
+                this.services.category.editById(id,{
                     name: data.name
                 })
                 .then(result => {
