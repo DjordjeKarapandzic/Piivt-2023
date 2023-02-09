@@ -2,6 +2,7 @@ import BaseService from "../../common/BaseService"
 import ItemModel from './ItemModel.model';
 import IAdapterOptions from '../../common/IAdapterOptions.interface';
 import CategoryModel from "../category/CategoryModel.model";
+import IAddItem from './dto/IAddItem.dto';
 
 export interface IItemAdapterOptions extends IAdapterOptions{
     loadCategory: boolean;
@@ -41,4 +42,9 @@ export default class ItemService extends BaseService<ItemModel, IItemAdapterOpti
     }
 
 
+    async add(data: IAddItem): Promise<ItemModel>{
+        return this.baseAdd(data, {
+            loadCategory:false,
+        });
+    }
 }
