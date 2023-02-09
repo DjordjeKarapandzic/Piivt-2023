@@ -107,6 +107,11 @@ export default abstract class BaseService<ReturnModel extends IModel, AdapterOpt
 
         return new Promise((resolve, reject) => {
             const properties = Object.getOwnPropertyNames(data);
+
+            if(properties.length === 0){
+                return reject({ message: "There are no updates",});
+            }
+
             const sqlPairs = properties.map(property => "`" + property + "` = ?").join(", ");
             const values = properties.map(property => data[property]);
             values.push(id);

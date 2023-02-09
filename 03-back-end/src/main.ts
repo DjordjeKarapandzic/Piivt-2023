@@ -7,6 +7,7 @@ import * as morgan from "morgan";
 import IApplicationResources from './common/IApplicationResources.interface';
 import * as mysql2 from 'mysql2/promise';
 import CategoryService from './components/category/CategoryService.service';
+import UserService from "./components/user/UserService.service";
 
 async function main() {
    
@@ -31,6 +32,7 @@ const applicationResources: IApplicationResources = {
     databaseConnection: db,
     services: {
         category: new CategoryService(db),
+        user: new UserService(db),
     }
 };
 
