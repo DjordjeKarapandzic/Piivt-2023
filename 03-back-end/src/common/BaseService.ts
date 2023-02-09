@@ -3,18 +3,25 @@ import IModel from './IModel.interface';
 import IAdapterOptions from './IAdapterOptions.interface';
 import IServiceData from './IServiceData.interface';
 import { resolve } from 'path';
+import { IServices } from './IApplicationResources.interface';
+import IApplicationResources from './IApplicationResources.interface';
 
 export default abstract class BaseService<ReturnModel extends IModel, AdapterOptions extends IAdapterOptions> {
     private database: mysql2.Connection;
+    private serviceInstances: IServices; 
 
-    constructor(databaseConnection: mysql2.Connection){
-        this.database = databaseConnection;
+    constructor(resources: IApplicationResources){
+        this.database = resources.databaseConnection;
+        this.serviceInstances = resources.services;
     }
 
     protected get db(): mysql2.Connection{
         return this.database;
     }
 
+    protected get services(): IServices{
+        return this.serviceInstances;
+    }
     abstract tableName(): string;
 
     protected abstract adaptToModel(data: any, options: AdapterOptions): Promise<ReturnModel>;
@@ -64,6 +71,60 @@ export default abstract class BaseService<ReturnModel extends IModel, AdapterOpt
                     }
 
                    resolve(await this.adaptToModel(rows[0], options));
+                })
+                .catch(error => {
+                    reject(error);
+                });
+            }
+        );
+    }
+
+    protected async getAllByFieldNameAndValue(fieldName: string, value: any, options: AdapterOptions): Promise<ReturnModel[]> {
+        const tableName = this.tableName();
+
+        return new Promise<ReturnModel[]>(
+            (resolve, reject) => {
+                const sql: string = `SELECT * FROM \`${ tableName }\` WHERE \`${ fieldName }\` = ?;`;
+
+                this.db.execute(sql, [ value ])
+                    .then( async ( [ rows ] ) => {
+                        if (rows === undefined) {
+                            return resolve([]);
+                        }
+
+                        const items: ReturnModel[] = [];
+
+                        for (const row of rows as mysql2.RowDataPacket[]) {
+                            items.push(await this.adaptToModel(row, options));
+                        }
+
+                        resolve(items);
+                    })
+                    .catch(error => {
+                        reject(error);
+                    });
+            }
+        );
+    }
+
+protected async getAllFromTableByFieldNameAndValue<OwnReturnType>(tableName: string, fieldName: string, value: any): Promise<OwnReturnType[]> {
+        return new Promise(
+            (resolve, reject) => {
+                const sql =  `SELECT * FROM \`${ tableName }\` WHERE \`${ fieldName }\` = ?;`;
+
+                this.db.execute(sql, [ value ])
+                .then( async ( [ rows ] ) => {
+                    if (rows === undefined) {
+                        return resolve([]);
+                    }
+
+                    const items: OwnReturnType[] = [];
+
+                    for (const row of rows as mysql2.RowDataPacket[]) {
+                        items.push(row as OwnReturnType);
+                    }
+
+                    resolve(items);
                 })
                 .catch(error => {
                     reject(error);
