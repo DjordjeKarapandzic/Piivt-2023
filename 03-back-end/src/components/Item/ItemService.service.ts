@@ -1,15 +1,16 @@
 import BaseService from "../../common/BaseService"
-import ItemModel, { IItemCategory } from './ItemModel.model';
+import ItemModel from './ItemModel.model';
 import IAdapterOptions from '../../common/IAdapterOptions.interface';
 import CategoryModel from "../category/CategoryModel.model";
 
 export interface IItemAdapterOptions extends IAdapterOptions{
-    loadCategory: false;
+    loadCategory: boolean;
 }
 
-// export const DefaultItemAdapterOptions: IItemAdapterOptions = {
-//     loadCategory: false,
-// }
+
+export const DefaultItemAdapterOptions: IItemAdapterOptions = {
+    loadCategory: false,
+}
 
 export default class ItemService extends BaseService<ItemModel, IItemAdapterOptions>{
     tableName(): string {

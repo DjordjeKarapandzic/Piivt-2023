@@ -8,6 +8,7 @@ import IApplicationResources from './common/IApplicationResources.interface';
 import * as mysql2 from 'mysql2/promise';
 import CategoryService from './components/category/CategoryService.service';
 import UserService from "./components/user/UserService.service";
+import ItemService from "./components/Item/ItemService.service";
 
 async function main() {
    
@@ -28,14 +29,21 @@ const db = await mysql2.createConnection({
     timezone: config.database.timezone,
 });
 
+
 const applicationResources: IApplicationResources = {
     databaseConnection: db,
+    services: {
+        category: null,
+        user: null,
+        item: null,
+    }
 };
 
-applicationResources.services = {
-        category: new CategoryService(applicationResources),
-        user: new UserService(applicationResources),
-};
+applicationResources.services.category      = new CategoryService(applicationResources);
+applicationResources.services.user          = new UserService(applicationResources);
+applicationResources.services.item          = new ItemService(applicationResources);
+
+
 
 const application: express.Application = express();
 
